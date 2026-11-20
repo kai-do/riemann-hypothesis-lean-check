@@ -1,0 +1,2 @@
+# Shell scripts and Lean/Python files must keep LF endings to run on Linux.
+* text=auto eol=lf

@@ -1,0 +1,7 @@
+name = "axiomcheck"
+version = "0.1.0"
+
+defaultTargets = ["axiomcheck"]
+[[lean_exe]]
+name = "axiomcheck"
+root = "AxiomCheck"

@@ -1,0 +1,14 @@
+# Downloaded archive parts (re-fetched by scripts/setup.sh)
+/downloads/
+
+# Extracted project (regenerated from the verified archive by scripts/setup.sh)
+/lean/
+
+# Reassembled archive, per-file hash manifest, dependency snapshot
+/.check/
+
+# Run outputs from scripts/check.sh and scripts/replay.sh
+/results/
+
+# Build outputs of the checker tools
+/tools/*/.lake/
