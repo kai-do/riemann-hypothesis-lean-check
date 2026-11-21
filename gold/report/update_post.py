@@ -14,6 +14,7 @@ import os
 import re
 import subprocess
 import sys
+from zoneinfo import ZoneInfo
 
 SSH = ["ssh", "-n", "-i", os.path.expanduser("~/rh-vm/rh_vm_key"), "-p", "2222",
        "-o", "UserKnownHostsFile=" + os.path.expanduser("~/rh-vm/known_hosts"),
@@ -82,7 +83,7 @@ echo "##END"''')
         elif cur:
             sec[cur].append(line)
 
-    now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    now = dt.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d %-I:%M %p %Z")
     status = "\n".join(sec.get("STATUS", []))
     phase = sec.get("PHASE", [])
     m = re.search(r"modules (\d+)/\d+ \(([\d.]+)%\)\s+elapsed (\S+)\s+rate (\d+)/h\s+build ETA ([\d.]+)h", status)
