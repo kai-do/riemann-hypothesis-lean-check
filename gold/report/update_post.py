@@ -131,7 +131,7 @@ echo "##END"''')
         rows.append((name, what, j["status"] if j else "⏸ Pending", j.get("evidence", "") if j else ""))
 
     with open(os.path.join(post_dir, "_steps.md"), "w") as f:
-        f.write("| # | Step | What it establishes | Status | Evidence |\n|--:|---|---|---|---|\n")
+        f.write("| # | Step | What It Establishes | Status | Evidence |\n|--:|---|---|---|---|\n")
         for i, (n, w, s, e) in enumerate(rows, 1):
             f.write(f"| {i} | {n} | {w} | {s} | {e} |\n")
 
@@ -148,7 +148,7 @@ echo "##END"''')
         ("nanoclo", "nanoclo", "sgraf812", "Independent Rust kernel, forked from nanoda."),
     ]
     with open(os.path.join(post_dir, "_kernels.md"), "w") as f:
-        f.write("| Checker | By | What it is | Verdict | Time | Peak RAM | Evidence |\n|---|---|---|---|--:|--:|---|\n")
+        f.write("| Checker | By | What It Is | Verdict | Time | Peak RAM | Evidence |\n|---|---|---|---|--:|--:|---|\n")
         for kid, name, by, what in kernels:
             j = judge.get(kid, {})
             f.write(f"| {name} | {by} | {what} | {j.get('status', '⏸ Pending')} | {j.get('time', '')} | "
@@ -201,7 +201,7 @@ echo "##END"''')
         done = [j for j in judges if j.get("status", "").startswith("✅")]
         line = f"**Checking:** {len(done)} of {len(kernels)} checkers have accepted so far; the rest are pending or running."
     with open(os.path.join(post_dir, "_status.md"), "w") as f:
-        f.write(f"::: {{.callout-important title=\"Status, updated {now}\"}}\n{line}\n:::\n")
+        f.write(f"::: {{.callout-important title=\"Status, Updated {now}\"}}\n{line}\n:::\n")
     print(line)
 
 
