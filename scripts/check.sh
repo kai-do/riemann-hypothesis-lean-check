@@ -132,7 +132,8 @@ log "INFO  build started $(date)"
 lake build 2>&1 | tee "$RUN/build.log"
 build_rc=${PIPESTATUS[0]}
 log "INFO  build finished $(date)"
-sorry_count="$(grep -c "declaration uses 'sorry'" "$RUN/build.log" || true)"
+# Lean 4.33 prints: declaration uses `sorry` (backticks). Match backticks or straight quotes.
+sorry_count="$(grep -cE "declaration uses [\`']sorry[\`']" "$RUN/build.log" || true)"
 [ "$build_rc" = 0 ] && pass "lake build succeeded" || abort "lake build failed (exit $build_rc; see $RUN/build.log)"
 [ "$sorry_count" = 0 ] && pass "no 'declaration uses sorry' warnings" || fail "$sorry_count 'declaration uses sorry' warnings in build log"
 
