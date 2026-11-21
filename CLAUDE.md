@@ -57,6 +57,10 @@ in minutes.
 If interrupted (reboot, OOM), re-run the same command. `lake build` resumes from where it
 stopped.
 
+**Before starting or monitoring a run on this machine, read [monitor/README.md](monitor/README.md).**
+The user follows runs only through Claude chat (Remote Control), so progress must be reported in chat
+using the watcher and check-ins described there.
+
 ## Pipeline
 
 | Step | Script | What it establishes |
