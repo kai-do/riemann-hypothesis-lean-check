@@ -7,7 +7,7 @@ S="ssh -n -i $HOME/rh-vm/rh_vm_key -p 2222 -o UserKnownHostsFile=$HOME/rh-vm/kno
 emit() { grep -qxF "$1" $ST || { echo "$1"; echo "$1" >> $ST; }; }
 down=0
 while true; do
-  out=$($S 'R=work/results; cat $R/build-phase.txt 2>/dev/null | sed "s/^/PHASE: /"; head -n2 $R/status.txt 2>/dev/null | sed "s/^/STATUS: /"; pgrep -f "06-build.sh|0[7-9]-.*\.sh" >/dev/null && echo "RUNNING" || echo "NOTRUNNING"; ls $R/judge-*.txt 2>/dev/null | while read f; do sed "s/^/JUDGE: /" $f; done' 2>/dev/null)
+  out=$($S 'R=work/results; cat $R/build-phase.txt 2>/dev/null | sed "s/^/PHASE: /"; head -n2 $R/status.txt 2>/dev/null | sed "s/^/STATUS: /"; pgrep -f "06-build.sh|07-judge.sh" >/dev/null && echo "RUNNING" || echo "NOTRUNNING"; for f in $R/judge-*.json; do [ -f "$f" ] && python3 -I -c "import json,sys; j=json.load(open(sys.argv[1])); print(\"JUDGE: \"+j[\"id\"]+\": \"+j[\"status\"])" "$f"; done' 2>/dev/null)
   if [ -z "$out" ]; then down=$((down+1)); [ $down = 3 ] && echo "VM UNREACHABLE for 6 min"; sleep 120; continue; fi
   down=0
   echo "$out" | grep '^PHASE: ' | while read -r l; do emit "$l"; done

@@ -190,8 +190,10 @@ echo "##END"''')
         line = "The VM could not be reached for this update; the tables below show the last known state."
     elif build_exit and build_exit.split()[2] != "0":
         line = "**The project build failed.** See step 10 for the exact error."
-    elif any(j.get("status", "").startswith("❌") for j in judges):
-        line = "**At least one checker rejected the proof.** See the checker table for the exact output."
+    elif any(j.get("status", "").startswith(("❌", "⚠️")) for j in judges if j.get("id") != "secondary") or \
+            any(j.get("status", "").startswith("❌") for j in judges if j.get("id") == "secondary"):
+        line = ("**At least one checker did not accept the proof** (a rejection, a decline or a failure to run). "
+                "See the checker table for its exact output.")
     elif m and not build_exit:
         line = (f"**Building the project:** {int(m.group(1)):,} of {TOTAL:,} modules ({m.group(2)}%) after {m.group(3)}. "
                 f"No verdict yet; the checkers run after the build and export.")
