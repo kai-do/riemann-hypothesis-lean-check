@@ -38,14 +38,16 @@ run() { # id timeout-hours -- cmd...   (sandboxed: read-only everything it needs
 CL=$T/con-leche/.lake/build/bin/con-leche
 pk() { local d=$1; ls -d $d/.lake/packages/*/.lake/build/lib/lean | tr '\n' ':' | sed 's/:$//'; }
 # Trusted side: the challenge and the Mathlib built from source before any project code ran.
-TRUSTED=$W/challenge/.lake/build/lib/lean:$(pk $W/challenge)
+CORE=/home/rhcheck/.elan/toolchains/leanprover--lean4---v4.33.1/lib/lean   # Lean core (Init, Std, Lean): trusted
+TRUSTED=$CORE:$W/challenge/.lake/build/lib/lean:$(pk $W/challenge)
 # Solution side: the project's compiled files (Mathlib is read from the trusted side first).
 SOLP=$W/proj/.lake/build/lib/lean:$(pk $W/proj)
-cd $W/sbtmp   # --schedule keeps its resume state in the working directory
-run con-leche-olean 24 -- $CL --olean --schedule --jobs=22 --compare --trusted-search-path=$TRUSTED --search-path=$SOLP Challenge Main
+cd $W/sbtmp
+run con-leche-olean 24 -- $CL --olean --jobs=22 --progress=10% --compare --trusted-search-path=$TRUSTED --search-path=$SOLP Challenge Main
 
 # The repo's own axiom audit (no project code runs: oleans loaded with loadExts := false).
-( cd $W/checker/tools/axiomcheck && lake build >/dev/null 2>&1 ) && cd $W/proj && \
-  RW=$W/proj/.lake run axiomcheck 6 -- lake env $W/checker/tools/axiomcheck/.lake/build/bin/axiomcheck
+# Built from the checker repo, then copied into tools/bin, which the sandbox allows to execute.
+( cd $W/checker/tools/axiomcheck && lake build >/dev/null 2>&1 ) && cp $W/checker/tools/axiomcheck/.lake/build/bin/axiomcheck $W/tools/bin/ && \
+  cd $W/proj && RW=$W/proj/.lake run axiomcheck 6 -- lake env $W/tools/bin/axiomcheck
 
 echo "OLEAN CHECKS DONE $(date -Is)" | tee -a $R/build-phase.txt

@@ -89,11 +89,17 @@ echo "##END"''')
     m = re.search(r"modules (\d+)/\d+ \(([\d.]+)%\)\s+elapsed (\S+)\s+rate (\d+)/h\s+build ETA ([\d.]+)h", status)
     errs = re.search(r"errors (\d+)\s+sorry-warnings (\d+)", status)
     build_exit = next((l for l in phase if l.startswith("BUILD EXIT")), None)
-    # Only the latest export attempt counts (an earlier attempt may have failed and been re-run).
+    # Only the latest export attempt counts (an earlier attempt may have failed, stalled or been re-run).
     starts = [i for i, l in enumerate(phase) if l.startswith("EXPORT START")]
     last_start = starts[-1] if starts else -1
-    export_start = bool(starts)
-    export_exit = next((l for l in reversed(phase[last_start + 1:]) if l.startswith("EXPORT EXIT")), None) if starts else None
+    after = phase[last_start + 1:] if starts else []
+    export_exit = next((l for l in reversed(after) if l.startswith("EXPORT EXIT")), None)
+    export_stopped = any(l.startswith("EXPORT STOPPED") for l in after)
+    export_start = bool(starts) and not export_stopped
+    # The most recent phase marker, to say what is running right now.
+    markers = ("BUILD EXIT", "EXPORT START", "EXPORT EXIT", "EXPORT STOPPED", "OLEAN CHECKS START", "OLEAN CHECKS RESTARTED",
+               "OLEAN CHECKS DONE", "== ", "JUDGE DONE")
+    current = next((l for l in reversed(phase) if l.startswith(markers)), "")
     judges = []
     for l in sec.get("JUDGE", []):
         l = l.strip()
@@ -118,14 +124,18 @@ echo "##END"''')
                      f"rough ETA {m.group(5)} h" + (f"; errors {errs.group(1)}, `sorry` warnings {errs.group(2)}" if errs else "")))
     else:
         rows.append(("Project build", "All 175,187 project modules compiled inside the sandbox.", "⏸ Pending", ""))
-    if export_exit:
+    if export_exit and not export_stopped:
         ok = export_exit.split()[2] == "0"
         sol = sec.get("SOL", [""])[0].split()[0] if sec.get("SOL") else ""
         rows.append(("Export", "The compiled proof written out as one file (`lean4export`) for the checkers.",
                      "✅ Done" if ok else "❌ Failed", f"`{export_exit}`" + (f"; sha256 {short(sol)}" if sol else "")))
     else:
+        stalled = any(l.startswith("EXPORT STOPPED") for l in phase)
         rows.append(("Export", "The compiled proof written out as one file (`lean4export`) for the checkers.",
-                     "⏳ Running" if export_start else "⏸ Pending", ""))
+                     "⏳ Running" if export_start else ("🔁 To be retried" if stalled else "⏸ Pending"),
+                     "The first attempt stalled after 46 GB: the exporter's memory plus the compiled files it reads didn't "
+                     "fit in the VM's RAM. It is re-run with more memory, after the checks that don't need it."
+                     if stalled else ""))
     for jid, name, what in [
         ("comparator", "Comparator", "Statements match the challenge; only the 3 standard axioms; Lean kernel + paranoid + nanoda replay."),
         ("secondary", "Secondary checks", "Axiom audit, per-module `leanchecker` replay, sources unchanged, tools unchanged."),
@@ -201,6 +211,13 @@ echo "##END"''')
     elif m and not build_exit:
         line = (f"**Building the project:** {int(m.group(1)):,} of {TOTAL:,} modules ({m.group(2)}%) after {m.group(3)}. "
                 f"No verdict yet; the checkers run after the build and export.")
+    elif current.startswith("== "):
+        name = current.split()[1]
+        done = [j for j in judges if j.get("status", "").startswith("✅") and j.get("id") != "secondary"]
+        line = (f"**Checking:** running `{name}` now. {len(done)} checker result(s) accepted so far; "
+                "the rest are pending.")
+    elif current.startswith("EXPORT START"):
+        line = "**Exporting the compiled proof** for the export-based checkers. No verdict from those yet."
     elif build_exit and not export_start:
         line = ("**The project build finished** with no errors and no `sorry` warnings. Hashing the compiled files, "
                 "then exporting the proof for the checkers. No verdict yet.")
