@@ -141,6 +141,10 @@ echo "##END"''')
         ("secondary", "Secondary checks", "Axiom audit, per-module `leanchecker` replay, sources unchanged, tools unchanged."),
     ]:
         j = judge.get(jid)
+        if not j and jid == "secondary" and "axiomcheck" in judge:
+            ax = judge["axiomcheck"]
+            j = {"status": "⏳ In progress", "evidence": f"Axiom audit {ax['status']}: {ax.get('evidence', '')}. "
+                 "Kernel replay and integrity checks still to come."}
         rows.append((name, what, j["status"] if j else "⏸ Pending", j.get("evidence", "") if j else ""))
 
     with open(os.path.join(post_dir, "_steps.md"), "w") as f:
