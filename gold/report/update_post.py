@@ -197,8 +197,13 @@ echo "##END"''')
     elif m and not build_exit:
         line = (f"**Building the project:** {int(m.group(1)):,} of {TOTAL:,} modules ({m.group(2)}%) after {m.group(3)}. "
                 f"No verdict yet; the checkers run after the build and export.")
+    elif build_exit and not export_start:
+        line = ("**The project build finished** with no errors and no `sorry` warnings. Hashing the compiled files, "
+                "then exporting the proof for the checkers. No verdict yet.")
     elif export_start and not export_exit:
         line = "**Exporting the compiled proof** for the checkers. No verdict yet."
+    elif export_exit and not judges:
+        line = "**Export finished.** The checkers are starting. No verdict yet."
     else:
         done = [j for j in judges if j.get("status", "").startswith("✅")]
         line = f"**Checking:** {len(done)} of {len(kernels)} checkers have accepted so far; the rest are pending or running."
