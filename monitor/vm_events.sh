@@ -7,7 +7,7 @@ S="ssh -n -i $HOME/rh-vm/rh_vm_key -p 2222 -o UserKnownHostsFile=$HOME/rh-vm/kno
 emit() { grep -qxF "$1" $ST || { echo "$1"; echo "$1" >> $ST; }; }
 down=0
 while true; do
-  out=$($S 'R=work/results; cat $R/build-phase.txt 2>/dev/null | sed "s/^/PHASE: /"; head -n2 $R/status.txt 2>/dev/null | sed "s/^/STATUS: /"; pgrep -f "06-build.sh|07-judge.sh" >/dev/null && echo "RUNNING" || echo "NOTRUNNING"; for f in $R/judge-*.json; do [ -f "$f" ] && python3 -I -c "import json,sys; j=json.load(open(sys.argv[1])); print(\"JUDGE: \"+j[\"id\"]+\": \"+j[\"status\"])" "$f"; done' 2>/dev/null)
+  out=$($S 'R=work/results; cat $R/build-phase.txt 2>/dev/null | sed "s/^/PHASE: /"; head -n2 $R/status.txt 2>/dev/null | sed "s/^/STATUS: /"; free -g | awk "/^Mem/{print \"MEMAVAIL \"\$7}"; free -g | awk "/^Swap/{print \"SWAPFREE \"\$4}"; pgrep -f "06-build.sh|07-judge.sh|07b-export|08-run-rest" >/dev/null && echo "RUNNING" || echo "NOTRUNNING"; for f in $R/judge-*.json; do [ -f "$f" ] && python3 -I -c "import json,sys; j=json.load(open(sys.argv[1])); print(\"JUDGE: \"+j[\"id\"]+\": \"+j[\"status\"])" "$f"; done' 2>/dev/null)
   if [ -z "$out" ]; then down=$((down+1)); [ $down = 3 ] && echo "VM UNREACHABLE for 6 min"; sleep 120; continue; fi
   down=0
   echo "$out" | grep '^PHASE: ' | while read -r l; do emit "$l"; done
@@ -17,7 +17,8 @@ while true; do
   e=$(echo "$out" | grep -oP 'errors \K[0-9]+'); so=$(echo "$out" | grep -oP 'sorry-warnings \K[0-9]+')
   [ "${e:-0}" -gt 0 ] && emit "BUILD ERRORS: $e error lines in build.log"
   [ "${so:-0}" -gt 0 ] && emit "SORRY: $so 'declaration uses sorry' warnings"
-  m=$(echo "$out" | grep -oP 'mem-avail \K[0-9]+'); [ "${m:-99}" -lt 8 ] && emit "MEMORY: only ${m}G available"
+  m=$(echo "$out" | grep -oP '^MEMAVAIL \K[0-9]+'); sw=$(echo "$out" | grep -oP '^SWAPFREE \K[0-9]+')
+  [ "${m:-99}" -lt 8 ] && [ "${sw:-99}" -lt 16 ] && emit "MEMORY: only ${m}G RAM and ${sw}G swap free"
   echo "$out" | grep -qx NOTRUNNING && emit "PROCESS: no run script running ($(echo "$out" | grep '^PHASE' | tail -1))"
   sleep 120
 done
