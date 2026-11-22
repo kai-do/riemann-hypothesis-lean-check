@@ -153,7 +153,7 @@ echo "##END"''')
         ("lean", "Lean kernel (C++)", "Lean FRO", "The reference kernel, replaying the export inside `lake comparator`."),
         ("lean-paranoid", "Lean kernel, paranoid mode", "Lean FRO", "The same kernel with extra internal checks."),
         ("nanoda", "nanoda", "Chris Bailey", "Independent kernel in Rust."),
-        ("con-leche-olean", "con-leche `--compare` (from `.olean`)", "Lean FRO", "Formally verified checker reading the compiled files directly, module by module, and comparing the statements with the challenge. Needs no export."),
+        ("con-leche-olean", "con-leche `--compare` (from `.olean`)", "Lean FRO", "Formally verified checker reading the compiled files directly and comparing the statements with the challenge (built from the trusted, pre-project Mathlib). Needs no export."),
         ("con-leche-compare", "con-leche `--compare`", "Lean FRO", "Formally verified checker; also re-does the statement comparison."),
         ("con-leche", "con-leche", "Lean FRO", "Formally verified: anything it accepts has a model in set theory."),
         ("con-ron", "con-ron", "Lean FRO", "Rust port of con-leche."),
