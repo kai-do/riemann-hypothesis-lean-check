@@ -218,7 +218,7 @@ echo "##END"''')
         ok = [j["id"] for j in judges if j.get("status", "").startswith("✅") and j.get("id") not in ("secondary", "axiomcheck")]
         warn = [j["id"] for j in judges if j.get("status", "").startswith("⚠️")]
         line = (f"**Checking.** {len(ok)} checker run(s) have accepted the proof so far, and none has rejected it."
-                + (f" {len(warn)} could not finish and {'is' if len(warn) == 1 else 'are'} being looked at (not a verdict)." if warn else "")
+                + (f" {len(warn)} could not finish (not a verdict; see the table)." if warn else "")
                 + (f" Running now: `{name}`." if name else ""))
     elif current.startswith("EXPORT START"):
         line = "**Exporting the compiled proof** for the export-based checkers. No verdict from those yet."
