@@ -89,8 +89,11 @@ echo "##END"''')
     m = re.search(r"modules (\d+)/\d+ \(([\d.]+)%\)\s+elapsed (\S+)\s+rate (\d+)/h\s+build ETA ([\d.]+)h", status)
     errs = re.search(r"errors (\d+)\s+sorry-warnings (\d+)", status)
     build_exit = next((l for l in phase if l.startswith("BUILD EXIT")), None)
-    export_exit = next((l for l in phase if l.startswith("EXPORT EXIT")), None)
-    export_start = any(l.startswith("EXPORT START") for l in phase)
+    # Only the latest export attempt counts (an earlier attempt may have failed and been re-run).
+    starts = [i for i, l in enumerate(phase) if l.startswith("EXPORT START")]
+    last_start = starts[-1] if starts else -1
+    export_start = bool(starts)
+    export_exit = next((l for l in reversed(phase[last_start + 1:]) if l.startswith("EXPORT EXIT")), None) if starts else None
     judges = []
     for l in sec.get("JUDGE", []):
         l = l.strip()
