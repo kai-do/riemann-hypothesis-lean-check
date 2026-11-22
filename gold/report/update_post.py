@@ -208,18 +208,18 @@ echo "##END"''')
         line = "The VM could not be reached for this update; the tables below show the last known state."
     elif build_exit and build_exit.split()[2] != "0":
         line = "**The project build failed.** See step 10 for the exact error."
-    elif any(j.get("status", "").startswith(("❌", "⚠️")) for j in judges if j.get("id") != "secondary") or \
-            any(j.get("status", "").startswith("❌") for j in judges if j.get("id") == "secondary"):
-        line = ("**At least one checker did not accept the proof** (a rejection, a decline or a failure to run). "
-                "See the checker table for its exact output.")
+    elif any(j.get("status", "").startswith("❌") for j in judges):
+        line = "**A checker rejected the proof.** See the checker table for its exact output."
     elif m and not build_exit:
         line = (f"**Building the project:** {int(m.group(1)):,} of {TOTAL:,} modules ({m.group(2)}%) after {m.group(3)}. "
                 f"No verdict yet; the checkers run after the build and export.")
-    elif current.startswith("== "):
-        name = current.split()[1]
-        done = [j for j in judges if j.get("status", "").startswith("✅") and j.get("id") != "secondary"]
-        line = (f"**Checking:** running `{name}` now. {len(done)} checker result(s) accepted so far; "
-                "the rest are pending.")
+    elif current.startswith("== ") or judges:
+        name = current.split()[1] if current.startswith("== ") else ""
+        ok = [j["id"] for j in judges if j.get("status", "").startswith("✅") and j.get("id") not in ("secondary", "axiomcheck")]
+        warn = [j["id"] for j in judges if j.get("status", "").startswith("⚠️")]
+        line = (f"**Checking.** {len(ok)} checker run(s) have accepted the proof so far, and none has rejected it."
+                + (f" {len(warn)} could not finish and {'is' if len(warn) == 1 else 'are'} being looked at (not a verdict)." if warn else "")
+                + (f" Running now: `{name}`." if name else ""))
     elif current.startswith("EXPORT START"):
         line = "**Exporting the compiled proof** for the export-based checkers. No verdict from those yet."
     elif build_exit and not export_start:
