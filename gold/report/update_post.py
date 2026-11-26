@@ -98,7 +98,7 @@ echo "##END"''')
     export_start = bool(starts) and not export_stopped
     # The most recent phase marker, to say what is running right now.
     markers = ("BUILD EXIT", "EXPORT START", "EXPORT EXIT", "EXPORT STOPPED", "OLEAN CHECKS START", "OLEAN CHECKS RESTARTED",
-               "OLEAN CHECKS DONE", "== ", "JUDGE DONE")
+               "OLEAN CHECKS DONE", "== ", "JUDGE DONE", "REPLAY STOPPED", "ALL CHECKS DONE")
     current = next((l for l in reversed(phase) if l.startswith(markers)), "")
     judges = []
     for l in sec.get("JUDGE", []):
@@ -213,6 +213,12 @@ echo "##END"''')
     elif m and not build_exit:
         line = (f"**Building the project:** {int(m.group(1)):,} of {TOTAL:,} modules ({m.group(2)}%) after {m.group(3)}. "
                 f"No verdict yet; the checkers run after the build and export.")
+    elif current.startswith(("REPLAY STOPPED", "JUDGE DONE", "ALL CHECKS DONE")) and judges:
+        ok = [j["id"] for j in judges if j.get("status", "").startswith("✅") and j.get("id") not in ("secondary", "axiomcheck")]
+        warn = [j["id"] for j in judges if j.get("status", "").startswith("⚠️") and j.get("id") != "replay"]
+        line = (f"**The main checks are done.** {len(ok)} checker runs accepted the proof, including Comparator "
+                "(`Your solution is okay!`), and **none rejected it**."
+                + (f" {len(warn)} could not finish, which is not a verdict (see the table)." if warn else ""))
     elif current.startswith("== ") or judges:
         name = current.split()[1] if current.startswith("== ") else ""
         ok = [j["id"] for j in judges if j.get("status", "").startswith("✅") and j.get("id") not in ("secondary", "axiomcheck")]
